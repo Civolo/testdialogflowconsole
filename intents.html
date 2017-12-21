@@ -1,0 +1,269 @@
+<!doctype html>
+<html class="no-js" lang="">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>Intents</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet"
+          type="text/css"
+          href="intents.css"/>
+    <link rel="manifest" href="site.webmanifest">
+    <link rel="apple-touch-icon" href="icon.png">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+    <!-- Place favicon.ico in the root directory -->
+
+    <link rel="stylesheet" href="css/normalize.css">
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+<!--[if lte IE 9]>
+<p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade
+    your browser</a> to improve your experience and security.</p>
+<![endif]-->
+<br><br><br>
+<div id="centerdiv" class="col-xs-12">
+    <div class="panel panel-default ">
+        <div class="panel-heading">I tuoi intent: </div>
+        <div  class="panel-body">
+            <div id="intent-list" class="btn-group-vertical col-xs-12">
+            </div>
+            <div id="newintent">
+                <button class="btn btn-success btn-block" onclick="shownewintent()">Nuovo intent</button>
+                <div id="containernewintent">
+                    <button onclick='addIntent()'>Add</button>
+                    <pre id="prenewintent" contenteditable='true'></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+</script>
+
+<!-- Add your site or application content here -->
+<script>
+    var intents;
+    var showingintent = -1;
+    var newintent = {
+        "id": "d4a8ea13-9107-43be-b2de-04aeb3157ee9",
+        "name": "welcome",
+        "auto": true,
+        "contexts": [],
+        "responses": [
+            {
+                "resetContexts": false,
+                "action": "input.welcome",
+                "affectedContexts": [
+                    {
+                        "name": "aftergreet",
+                        "parameters": {},
+                        "lifespan": 3
+                    }
+                ],
+                "parameters": [
+                    {
+                        "id": "cb9663f4-c95c-4b3f-bd55-1d1dda26faf5",
+                        "required": false,
+                        "dataType": "@greeting",
+                        "name": "greeting",
+                        "value": "$greeting",
+                        "isList": false
+                    }
+                ],
+                "messages": [
+                    {
+                        "type": 0,
+                        "speech": "Ciao! Io sono Kevin, come posso aiutarti?"
+                    }
+                ],
+                "defaultResponsePlatforms": {},
+                "speech": []
+            }
+        ],
+        "priority": 500000,
+        "webhookUsed": false,
+        "webhookForSlotFilling": false,
+        "fallbackIntent": false,
+        "events": [
+            {
+                "name": "WELCOME"
+            }
+        ],
+        "userSays": [
+            {
+                "id": "d63ff316-98c3-4ab7-aec5-3d58da3695c8",
+                "data": [
+                    {
+                        "text": "buona sera",
+                        "alias": "greeting",
+                        "meta": "@greeting",
+                        "userDefined": false
+                    }
+                ],
+                "isTemplate": false,
+                "count": 0,
+                "updated": 0,
+                "isAuto": false
+            },
+            {
+                "id": "867952e8-5cb6-4b95-8dec-3c22ef1b3ffd",
+                "data": [
+                    {
+                        "text": "salve",
+                        "alias": "greeting",
+                        "meta": "@greeting",
+                        "userDefined": false
+                    }
+                ],
+                "isTemplate": false,
+                "count": 0,
+                "updated": 0,
+                "isAuto": false
+            },
+            {
+                "id": "b3b756f1-50f4-4795-8ecd-1807a1f01d4e",
+                "data": [
+                    {
+                        "text": "ciao",
+                        "alias": "greeting",
+                        "meta": "@greeting",
+                        "userDefined": false
+                    }
+                ],
+                "isTemplate": false,
+                "count": 0,
+                "updated": 0,
+                "isAuto": false
+            }
+        ],
+        "followUpIntents": [],
+        "templates": []
+    }
+
+    function getIntents() {
+        $('#intent-list').empty()
+        fetch('http://localhost:3000/agents/intents', {method : "GET"}).then(function(response) {
+            return response.text();
+        }).then(function(text) {
+            intents = JSON.parse(text)
+            for(var i = 0; i < intents.length; i++) {
+                $('#intent-list').append("<div id='intent_" + i + "'><button id='btnintent_" + i + "' onclick='showDetails(" + i + ")' type=\"button\" class=\"btn btn-default btn-block\">" + intents[i].name + "</button></div>")
+            }
+        });
+
+        $('#containernewintent').hide();
+    }
+
+    function shownewintent() {
+        if($('#containernewintent').is(":visible")){
+            $('#containernewintent').hide()
+
+        }else{
+            $('#prenewintent').text(JSON.stringify(newintent, null, 4))
+            $('#containernewintent').show()
+        }
+
+    }
+
+    function addIntent() {
+        try{
+            fetch('http://localhost:3000/agents/intents', {
+                method : "post",
+                body : $('#prenewintent').text(),
+                headers : {
+                    "Content-Type" : "Application/json"
+                }
+            }).then(function(response) {
+                return response.text();
+            }).then(text => {
+                try{
+                    console.log($('#prenewintent').text())
+                    window.alert(JSON.parse(text).status.errorType)
+                    getIntents()
+                }catch (error){
+                    console.log("ERROR -> \n", error, "\n\nBody -> \n" + text)
+                    window.alert("Si è verificato un errore controllare la console del browser per ulteriori dettagli.")
+                }            });
+        }catch (error){
+            window.alert(error)
+        }
+    }
+
+    function showDetails(intentIndex) {
+        if(intentIndex != showingintent) {
+            if(showingintent != -1){
+                showDetails(showingintent)
+            }
+            $('#intent_' + intentIndex).append("<div id='container_" + intentIndex + "' class='container'><button onclick='updateIntent()'>Save</button><button onclick='deleteIntent()'>Delete</button></div>")
+            showingintent = intentIndex
+            getIntentDetails(intents[intentIndex].id)
+        }else{
+            showingintent = -1
+            $('#container_' + intentIndex).remove()
+        }
+    }
+
+    function getIntentDetails(intentId) {
+        fetch('http://localhost:3000/agents/intents/' + intentId, {method : "GET"}).then(function(response) {
+            return response.text();
+        }).then(function(text) {
+            $('#container_' + showingintent).append("<pre id='preintent_" + showingintent + "' contenteditable='true'></pre>")
+
+            $('#preintent_' + showingintent).text(JSON.stringify(JSON.parse(text), null, 4))
+        });
+    }
+
+    function deleteIntent() {
+        try{
+            fetch('http://localhost:3000/agents/intents/' + intents[showingintent].id, {
+                method : "delete",
+            }).then(function(response) {
+                return response.text();
+            }).then(text => {
+                try{
+                    window.alert(JSON.parse(text).status.errorType)
+                    $('#intent_' + showingintent).remove()
+                    showingintent = -1
+                }catch (error){
+                    console.log("ERROR -> \n", error, "\n\nBody -> \n" + text)
+                    window.alert("Si è verificato un errore, controllare la console del browser per ulteriori dettagli.")
+                }
+            });
+        }catch (error){
+            window.alert(error)
+        }
+    }
+
+    function updateIntent() {
+        try{
+            fetch('http://localhost:3000/agents/intents/' + intents[showingintent].id, {
+                method : "put",
+                body : $('#preintent_' + showingintent).text(),
+                headers : {
+                    "Content-Type" : "Application/json"
+                }
+            }).then(function(response) {
+                return response.text();
+            }).then(text => {
+                try{
+                    window.alert(JSON.parse(text).status.errorType)
+                    $('#btnintent_' + showingintent).text("" + JSON.parse($('#preintent_' + showingintent).text()).name)
+                }catch (error){
+                    console.log("ERROR -> \n", error, "\n\nBody -> \n" + text)
+                    window.alert("Si è verificato un errore, controllare la console del browser per ulteriori dettagli.")
+                }
+            });
+        }catch (error){
+            window.alert(error)
+        }
+    }
+
+    getIntents()
+</script>
+</body>
+</html>

@@ -1,0 +1,189 @@
+<!doctype html>
+<html class="no-js" lang="">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>Entities</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet"
+          type="text/css"
+          href="intents.css"/>
+    <link rel="manifest" href="site.webmanifest">
+    <link rel="apple-touch-icon" href="icon.png">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+    <!-- Place favicon.ico in the root directory -->
+
+    <link rel="stylesheet" href="css/normalize.css">
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+<!--[if lte IE 9]>
+<p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade
+    your browser</a> to improve your experience and security.</p>
+<![endif]-->
+<br><br><br>
+<div id="centerdiv" class="col-xs-12">
+    <div class="panel panel-default ">
+        <div class="panel-heading">Le tue entities: </div>
+        <div  class="panel-body">
+            <div id="entities-list" class="btn-group-vertical col-xs-12">
+            </div>
+            <div id="newentity">
+                <button class="btn btn-success btn-block" onclick="shownewentity()">Nuova entity</button>
+                <div id="containernewentity">
+                    <button onclick='addEntity()'>Add</button>
+                    <pre id="prenewentity" contenteditable='true'></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+</script>
+
+<!-- Add your site or application content here -->
+<script>
+    var entities;
+    var showingentity = -1;
+    var newentity = {
+        "entries": [{
+            "synonyms": [
+                "example1",
+                "example2"
+            ],
+            "value": "example"
+        },
+            {
+                "value": "example"
+            }
+        ],
+        "name": "example"
+    }
+
+    function getEntities() {
+        $('#entities-list').empty()
+        fetch('http://localhost:3000/agents/entities', {method : "GET"}).then(function(response) {
+            return response.text();
+        }).then(function(text) {
+            entities = JSON.parse(text)
+            for(var i = 0; i < entities.length; i++) {
+                $('#entities-list').append("<div id='entity_" + i + "'><button id='btnentity_" + i + "' onclick='showDetails(" + i + ")' type=\"button\" class=\"btn btn-default btn-block\">@" + entities[i].name + "</button></div>")
+            }
+        });
+
+        $('#containernewentity').hide();
+    }
+
+    function shownewentity() {
+        if($('#containernewentity').is(":visible")){
+            $('#containernewentity').hide()
+
+        }else{
+            $('#prenewentity').text(JSON.stringify(newentity, null, 4))
+            $('#containernewentity').show()
+        }
+
+    }
+
+    function addEntity() {
+        try{
+            fetch('http://localhost:3000/agents/entities', {
+                method : "post",
+                body : $('#prenewentity').text(),
+                headers : {
+                    "Content-Type" : "Application/json"
+                }
+            }).then(function(response) {
+                return response.text();
+            }).then(text => {
+                try{
+                    console.log($('#prenewentity').text())
+                    window.alert(JSON.parse(text).status.errorType)
+                    getEntities()
+                }catch (error){
+                    console.log("ERROR -> \n", error, "\n\nBody -> \n" + text)
+                    window.alert("Si è verificato un errore controllare la console del browser per ulteriori dettagli.")
+                }            });
+        }catch (error){
+            window.alert(error)
+        }
+    }
+
+    function showDetails(entityIndex) {
+        if(entityIndex != showingentity) {
+            if(showingentity != -1){
+                showDetails(showingentity)
+            }
+            $('#entity_' + entityIndex).append("<div id='container_" + entityIndex + "' class='container'><button onclick='updateEntity()'>Save</button><button onclick='deleteEntity()'>Delete</button></div>")
+            showingentity = entityIndex
+            getEntityDetails(entities[entityIndex].id)
+        }else{
+            showingentity = -1
+            $('#container_' + entityIndex).remove()
+        }
+    }
+
+    function getEntityDetails(entityId) {
+        fetch('http://localhost:3000/agents/entities/' + entityId, {method : "GET"}).then(function(response) {
+            return response.text();
+        }).then(function(text) {
+            console.log(text)
+            console.log(showingentity)
+            $('#container_' + showingentity).append("<pre id='preentity_" + showingentity + "' contenteditable='true'></pre>")
+
+            $('#preentity_' + showingentity).text(JSON.stringify(JSON.parse(text), null, 4))
+        });
+    }
+
+    function deleteEntity() {
+        try{
+            fetch('http://localhost:3000/agents/entities/' + entities[showingentity].id, {
+                method : "delete",
+            }).then(function(response) {
+                return response.text();
+            }).then(text => {
+                try{
+                    window.alert(JSON.parse(text).status.errorType)
+                    $('#entity_' + showingentity).remove()
+                    showingentity = -1
+                }catch (error){
+                    console.log("ERROR -> \n", error, "\n\nBody -> \n" + text)
+                    window.alert("Si è verificato un errore, controllare la console del browser per ulteriori dettagli.")
+                }
+            });
+        }catch (error){
+            window.alert(error)
+        }
+    }
+
+    function updateEntity() {
+        try{
+            fetch('http://localhost:3000/agents/entities/' + entities[showingentity].id, {
+                method : "put",
+                body : $('#preentity_' + showingentity).text(),
+                headers : {
+                    "Content-Type" : "Application/json"
+                }
+            }).then(function(response) {
+                return response.text();
+            }).then(text => {
+                try{
+                    window.alert(JSON.parse(text).status.errorType)
+                    $('#btnentity_' + showingentity).text("@" + JSON.parse($('#preentity_' + showingentity).text()).name)
+                }catch (error){
+                    console.log("ERROR -> \n", error, "\n\nBody -> \n" + text)
+                    window.alert("Si è verificato un errore controllare la console del browser per ulteriori dettagli.")
+                }            });
+        }catch (error){
+            window.alert(error)
+        }
+    }
+
+    getEntities()
+</script>
+</body>
+</html>

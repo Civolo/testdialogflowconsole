@@ -1,0 +1,198 @@
+<!doctype html>
+<html class="no-js" lang="">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>Contexts</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet"
+          type="text/css"
+          href="contexts.css"/>
+    <link rel="manifest" href="site.webmanifest">
+    <link rel="apple-touch-icon" href="icon.png">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+    <!-- Place favicon.ico in the root directory -->
+
+    <link rel="stylesheet" href="css/normalize.css">
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+<!--[if lte IE 9]>
+<p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade
+    your browser</a> to improve your experience and security.</p>
+<![endif]-->
+<br><br><br>
+<div class="form-group">
+    <div id="center" class="col-xs-12">
+    <label for="sessionId">SessionId:</label>
+    <input type="text" class="form-control" id="sessionId">
+    <button class="btn btn-default" onclick="getContexts()">Ricarica contexts</button>
+    </div>
+</div>
+<br><br><br><br>
+<div id="centerdiv" class="col-xs-12">
+    <div class="panel panel-default ">
+        <div class="panel-heading">I contexts della sessione: </div>
+        <div  class="panel-body">
+            <div id="contexts-list" class="btn-group-vertical col-xs-12">
+            </div>
+            <div id="newcontext">
+                <button class="btn btn-success btn-block" onclick="shownewcontext()">Nuovo context</button>
+                <div id="containernewcontext">
+                    <button onclick='addContext()'>Add</button>
+                    <pre id="prenewcontext" contenteditable='true'></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+</script>
+
+<!-- Add your site or application content here -->
+<script>
+    var contexts;
+    var showingcontext = -1;
+    var newcontext = {
+            "name": "newcontext",
+            "parameters": {
+                "greeting.original": "ciao",
+                "intent_action": "input.welcome",
+                "greeting": "ciao"
+            },
+            "lifespan": 3
+        }
+
+    function getContexts() {
+        $('#contexts-list').empty()
+        fetch('http://localhost:3000/agents/contexts?sessionId=' + $('#sessionId').val(), {method : "GET"}).then(function(response) {
+            return response.text();
+        }).then(function(text) {
+            contexts = JSON.parse(text)
+            console.log(contexts)
+            for(var i = 0; i < contexts.length; i++) {
+                $('#contexts-list').append("<div id='context_" + i + "'><button id='btncontext_" + i + "' onclick='showDetails(" + i + ")' type=\"button\" class=\"btn btn-default btn-block\">" + contexts[i].name + "</button></div>")
+            }
+        });
+
+        $('#containernewcontext').hide();
+    }
+
+    function shownewcontext() {
+
+        if($('#containernewcontext').is(":visible")){
+            $('#containernewcontext').hide()
+        }else{
+            $('#prenewcontext').text(JSON.stringify(newcontext, null, 4))
+            $('#containernewcontext').show()
+        }
+
+    }
+
+    function addContext() {
+        try{
+            fetch('http://localhost:3000/agents/contexts?sessionId=' + $('#sessionId').val(), {
+                method : "post",
+                body : $('#prenewcontext').text(),
+                headers : {
+                    "Content-Type" : "Application/json"
+                }
+            }).then(function(response) {
+                return response.text();
+            }).then(text => {
+                try{
+                    console.log($('#prenewcontext').text())
+                    window.alert(JSON.parse(text).status.errorType)
+                    getContexts()
+                }catch (error){
+                    console.log("ERROR -> \n", error, "\n\nBody -> \n" + text)
+                    window.alert("Si è verificato un errore controllare la console del browser per ulteriori dettagli.")
+                }            });
+        }catch (error){
+            window.alert(error)
+        }
+    }
+
+    function showDetails(contextIndex) {
+        if(contextIndex != showingcontext) {
+            if(showingcontext != -1){
+                showDetails(showingcontext)
+            }
+            $('#context_' + contextIndex).append("<div id='container_" + contextIndex + "' class='container'><button onclick='updateContext()'>Save</button><button onclick='deleteContext()'>Delete</button></div>")
+            showingcontext = contextIndex
+            getContextDetails(contexts[contextIndex].name)
+        }else{
+            showingcontext = -1
+            $('#container_' + contextIndex).remove()
+        }
+    }
+
+    function getContextDetails(contextname) {
+        fetch('http://localhost:3000/agents/contexts/' + contextname + '?sessionId=' + $('#sessionId').val(), {method : "GET"}).then(function(response) {
+            return response.text();
+        }).then(function(text) {
+            console.log(text)
+            console.log(showingcontext)
+            $('#container_' + showingcontext).append("<pre id='precontext_" + showingcontext + "' contenteditable='true'></pre>")
+
+            $('#precontext_' + showingcontext).text(JSON.stringify(JSON.parse(text), null, 4))
+        });
+    }
+
+    function deleteContext() {
+        try{
+            fetch('http://localhost:3000/agents/contexts/' + contexts[showingcontext].name + '?sessionId=' + $('#sessionId').val(), {
+                method : "delete",
+            }).then(function(response) {
+                return response.text();
+            }).then(text => {
+                try{
+                    window.alert(JSON.parse(text).status.errorType)
+                    $('#context_' + showingcontext).remove()
+                    showingcontext = -1
+                }catch (error){
+                    console.log("ERROR -> \n", error, "\n\nBody -> \n" + text)
+                    window.alert("Si è verificato un errore, controllare la console del browser per ulteriori dettagli.")
+                }
+            });
+        }catch (error){
+            window.alert(error)
+        }
+    }
+
+    function updateContext() {
+        try{
+            fetch('http://localhost:3000/agents/contexts?sessionId=' + $('#sessionId').val(), {
+                method : "post",
+                body : $('#precontext_' + showingcontext).text(),
+                headers : {
+                    "Content-Type" : "Application/json"
+                }
+            }).then(function(response) {
+                return response.text();
+            }).then(text => {
+                try{
+                    window.alert(JSON.parse(text).status.errorType)
+                    $('#btncontext_' + showingcontext).text("" + JSON.parse($('#precontext_' + showingcontext).text()).name)
+                }catch (error){
+                    console.log("ERROR -> \n", error, "\n\nBody -> \n" + text)
+                    window.alert("Si è verificato un errore controllare la console del browser per ulteriori dettagli.")
+                }            });
+        }catch (error){
+            window.alert(error)
+        }
+    }
+
+    function init() {
+        $('#sessionId').val('1234567')
+        getContexts()
+    }
+
+    init()
+</script>
+</body>
+</html>

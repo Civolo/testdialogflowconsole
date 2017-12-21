@@ -1,0 +1,227 @@
+<!doctype html>
+<html class="no-js" lang="">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>DialogFlow Chat</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet"
+          type="text/css"
+          href="chat.css"/>
+    <link rel="manifest" href="site.webmanifest">
+    <link rel="apple-touch-icon" href="icon.png">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+    <!-- Place favicon.ico in the root directory -->
+
+    <link rel="stylesheet" href="css/normalize.css">
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+<!--[if lte IE 9]>
+<p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade
+    your browser</a> to improve your experience and security.</p>
+<![endif]-->
+<div class="col-xs-6">
+    <br><br><br>
+    <div class="col-xs-6">
+        <div class="dropdown">
+            <h6>Agente:</h6>
+            <button id="agent" class="btn btn-primary dropdown-toggle btn-block" type="button" data-toggle="dropdown">
+                kevin
+                <span class="caret"></span></button>
+            <ul class="dropdown-menu">
+                <li><a onclick="selectAgent('kevin', 'Kevin')">Kevin</a></li>
+                <li><a onclick="selectAgent('support1', 'Support-1')">Support-1</a></li>
+                <li><a onclick="selectAgent('testwelcome', 'test-welcome')">test-welcome</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="col-xs-6">
+        <h6><br></h6>
+        <div class="col-xs-6">
+        <button id="clearchat" onclick="clearConversation()" class="btn btn-info btn-block">Cancella chat</button>
+            </div>
+        <div class="col-xs-6">
+            <button id="clearlog" onclick="clearLog()" class="btn btn-info btn-block">Cancella log</button>
+        </div>
+    </div>
+
+    <br><br><br><br>
+    <div class="col-xs-12">
+        <div class="form-group text-center">
+            <label for="text-area">Messaggio:</label>
+            <input type="text" class="form-control" id="text-area">
+        </div>
+        <button id="btnsend" type="submit" class="btn btn-success btn-block">Invia Messaggio</button>
+
+        <h1>Conversazione:</h1>
+        <dl id="messages">
+        </dl>
+
+    </div>
+</div>
+<div class="col-xs-6">
+    <div class="col-xs-12 text-left">
+        <div class="col-xs-12 text-left">
+            <div class="col-xs-6 text-left">
+                <h5 id="sessionID"> -> </h5>
+            </div>
+            <div class="col-xs-6">
+                <h5></h5>
+                <button onclick="newSessionId()" value="Fresh Session Id">Fresh Session ID</button>
+            </div>
+        </div>
+        <h5 id="lang">Lang -> </h5>
+        <h5 id="timezone">TimeZone -> </h5>
+    </div>
+    <div class="col-xs-12">
+        <h1>Log:</h1>
+        <dl id="log">
+        </dl>
+    </div>
+</div>
+<script>
+    $('#text-area').focus();
+</script>
+
+<!-- Add your site or application content here -->
+<script>
+    var agent = "kevin"
+    var sessionID = "1234567"
+    var lang
+    var timezone
+
+    function selectAgent(agentSelected, displayname) {
+        agent = agentSelected
+        $('#agent').text(displayname)
+        $('#agent').append("<span class=\"caret\"></span>")
+        $('#text-area').focus();
+        writeLog("agent-selector", "Changed agent to " + displayname)
+    }
+
+    function clearConversation() {
+        $('#messages').empty()
+        $('#text-area').focus();
+        writeLog("info", "Conversation clean")
+    }
+
+    function clearLog() {
+        $('#log').empty()
+        $('#text-area').focus();
+    }
+
+    function writeLog(sender, message, json) {
+        if (!json) {
+            $('#log').append("<dt>[" + sender.toUpperCase() + "]</dt><dd>&emsp;" + message + "</dd><br>")
+        } else {
+            $('#log').append("<dt>[" + sender.toUpperCase() + "]</dt><pre contenteditable='true'>&emsp;" + syntaxHighlight(message) + "</pre><br>")
+        }
+    }
+
+    function writeError(message) {
+        writeLog("error", message)
+    }
+
+    function getSessionId() {
+        return Math.floor((Math.random() * 100000) + 1);
+    }
+
+    function newSessionId() {
+        sessionID = getSessionId()
+        $('#sessionID').text("SessionId -> " + sessionID)
+    }
+
+    function initSession() {
+        lang = 'it'
+        timezone = "Europe/Madrid"
+        $('#sessionID').text("SessionId -> " + sessionID)
+        $('#lang').text("Lang -> " + lang)
+        $('#timezone').text("Timezone -> " + timezone)
+    }
+
+    function sendMSG() {
+
+        callDialogFlow($('#text-area').val())
+
+        $('#text-area').val("");
+        $('#text-area').focus();
+    }
+
+    function addSendToConversation(text) {
+        $('#messages').append("<dt>Tu:</dt><dd>" + text + "</dd><p></p>")
+    }
+
+    function addResponseToConversation(text) {
+        $('#messages').append("<dt>DialogFlow:</dt><dd><mark>" + text + "</mark></dd><p></p>")
+    }
+
+    function callDialogFlow(query) {
+        addSendToConversation(query);
+
+        var body = {
+            agent: agent,
+            timeZone: timezone,
+            sessionId: sessionID,
+            lang: lang,
+            message: query
+        }
+
+        fetch('http://localhost:3000/chat', {
+            method: "post",
+            body: JSON.stringify(body),
+            headers: {
+                'Content-Type': 'Application/json',
+            }
+        }).then(function (response) {
+            return response.text();
+        }).then(function (text) {
+            try {
+                writeLog("fetch-request-body", JSON.stringify(body, null, 4), true)
+                writeLog("fetch-response-body", JSON.stringify(JSON.parse(text), null, 4), true)
+                addResponseToConversation(JSON.parse(text).result.speech)
+            } catch (error) {
+                writeError(error)
+            }
+        });
+    }
+
+    function syntaxHighlight(json) {
+        json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+            var cls = 'number';
+            if (/^"/.test(match)) {
+                if (/:$/.test(match)) {
+                    cls = 'key';
+                } else {
+                    cls = 'string';
+                }
+            } else if (/true|false/.test(match)) {
+                cls = 'boolean';
+            } else if (/null/.test(match)) {
+                cls = 'null';
+            }
+            return '<span class="' + cls + '">' + match + '</span>';
+        });
+    }
+
+    $(document).ready(function () {
+        $("#btnsend").click(function () {
+            sendMSG()
+        });
+    });
+
+    $('#text-area').keypress(function (e) {
+        if (e.which == 13) {
+            sendMSG();
+            return false;    //<---- Add this line
+        }
+    });
+
+    initSession()
+</script>
+</body>
+</html>

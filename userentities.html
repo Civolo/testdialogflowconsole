@@ -1,0 +1,188 @@
+<!doctype html>
+<html class="no-js" lang="">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>userentities</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet"
+          type="text/css"
+          href="intents.css"/>
+    <link rel="manifest" href="site.webmanifest">
+    <link rel="apple-touch-icon" href="icon.png">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+    <!-- Place favicon.ico in the root directory -->
+
+    <link rel="stylesheet" href="css/normalize.css">
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+<!--[if lte IE 9]>
+<p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade
+    your browser</a> to improve your experience and security.</p>
+<![endif]-->
+<br><br><br>
+<div class="form-group">
+    <div id="center" class="col-xs-12">
+        <label for="sessionId">SessionId:</label>
+        <input type="text" class="form-control" id="sessionId">
+        <br>
+        <label for="userentityform">User Entity:</label>
+        <input type="text" class="form-control" id="userentityform">
+        <br>
+        <button class="btn btn-default" onclick="getuserentity()">Cerca user entity</button>
+        <br><br>
+    </div>
+</div>
+<div id="centerdiv" class="col-xs-12">
+    <div class="panel panel-default ">
+        <div class="panel-heading">La tua userentity: </div>
+        <div class="panel-body">
+            <div id="userentity">
+                <button onclick='updateuserentity()'>Save</button><button onclick='deleteuserentity()'>Delete</button>
+            </div>
+            <div id="newuserentity">
+                <button class="btn btn-success btn-block" onclick="shownewuserentity()">Nuova userentity</button>
+                <div id="containernewuserentity">
+                    <button onclick='adduserentity()'>Add</button>
+                    <pre id="prenewuserentity" contenteditable='true'></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+</script>
+
+<!-- Add your site or application content here -->
+<script>
+    var userentities;
+    var newuserentity = {
+        "entities": [
+            {
+                "entries": [
+                    {
+                        "synonyms": [
+                            "user-apple",
+                            "user-red apple"
+                        ],
+                        "value": "user-apple"
+                    },
+                    {
+                        "synonyms": [
+                            "user-banana"
+                        ],
+                        "value": "user-banana"
+                    }
+                ],
+                "name": "user-fruit"
+            }
+        ],
+        "sessionId": ""
+    }
+
+    function adduserentity() {
+        try{
+            fetch('http://localhost:3000/agents/userentities?sessionId=' + $('#sessionId').val(), {
+                method : "post",
+                body : $('#prenewuserentity').text(),
+                headers : {
+                    "Content-Type" : "Application/json"
+                }
+            }).then(function(response) {
+                return response.text();
+            }).then(text => {
+                try{
+                    console.log($('#prenewuserentity').text())
+                    $('#containernewuserentity').hide()
+
+                    window.alert(JSON.parse(text).status.errorType)
+                }catch (error){
+                    console.log("ERROR -> \n", error, "\n\nBody -> \n" + text)
+                    window.alert("Si è verificato un errore controllare la console del browser per ulteriori dettagli.")
+                }            });
+        }catch (error){
+            window.alert(error)
+        }
+    }
+
+    function shownewuserentity() {
+        if($('#containernewuserentity').is(":visible")){
+            $('#containernewuserentity').hide()
+
+        }else{
+            newuserentity.sessionId = $('#sessionId').val()
+            $('#prenewuserentity').text(JSON.stringify(newuserentity, null, 4))
+            $('#containernewuserentity').show()
+        }
+
+    }
+
+    function getuserentity() {
+        fetch('http://localhost:3000/agents/userentities/' + $('#userentityform').val() + '?sessionId=' + $('#sessionId').val(), {method : "GET"}).then(function(response) {
+            return response.text();
+        }).then(function(text) {
+            console.log(text)
+            $('#preuserentity').remove()
+            $('#userentity').append("<pre id='preuserentity' contenteditable='true'></pre>")
+            $('#preuserentity').text(JSON.stringify(JSON.parse(text), null, 4))
+        });
+    }
+
+    function deleteuserentity() {
+        try{
+            fetch('http://localhost:3000/agents/userentities/' + $('#userentityform').val() + '?sessionId=' + $('#sessionId').val(), {
+                method : "delete",
+            }).then(function(response) {
+                return response.text();
+            }).then(text => {
+                try{
+                    window.alert(JSON.parse(text).status.errorType)
+                    $('#preuserentity').remove()
+                }catch (error){
+                    console.log("ERROR -> \n", error, "\n\nBody -> \n" + text)
+                    window.alert("Si è verificato un errore, controllare la console del browser per ulteriori dettagli.")
+                }
+            });
+        }catch (error){
+            window.alert(error)
+        }
+    }
+
+    function updateuserentity() {
+        try{
+            fetch('http://localhost:3000/agents/userentities?sessionId=' + $('#sessionId').val(), {
+                method : "put",
+                body : $('#preuserentity').text(),
+                headers : {
+                    "Content-Type" : "Application/json"
+                }
+            }).then(function(response) {
+                return response.text();
+            }).then(text => {
+                try{
+                    window.alert(JSON.parse(text).status.errorType)
+                }catch (error){
+                    console.log("ERROR -> \n", error, "\n\nBody -> \n" + text)
+                    window.alert("Si è verificato un errore controllare la console del browser per ulteriori dettagli.")
+                }            });
+        }catch (error){
+            window.alert(error)
+        }
+    }
+
+    function init() {
+        $('#sessionId').val('1234567')
+        $('#userentityform').val('user-fruit')
+        $('#containernewuserentity').hide()
+
+    }
+
+    init()
+</script>
+</body>
+</html>
