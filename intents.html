@@ -14,6 +14,7 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="vars.js"></script>
 
     <!-- Place favicon.ico in the root directory -->
 
@@ -147,7 +148,7 @@
 
     function getIntents() {
         $('#intent-list').empty()
-        fetch('http://localhost:3000/agents/intents', {method : "GET"}).then(function(response) {
+        fetch(path + '/agents/intents', {method : "GET"}).then(function(response) {
             return response.text();
         }).then(function(text) {
             intents = JSON.parse(text)
@@ -172,7 +173,7 @@
 
     function addIntent() {
         try{
-            fetch('http://localhost:3000/agents/intents', {
+            fetch(path + '/agents/intents', {
                 method : "post",
                 body : $('#prenewintent').text(),
                 headers : {
@@ -209,7 +210,7 @@
     }
 
     function getIntentDetails(intentId) {
-        fetch('http://localhost:3000/agents/intents/' + intentId, {method : "GET"}).then(function(response) {
+        fetch(path + '/agents/intents/' + intentId, {method : "GET"}).then(function(response) {
             return response.text();
         }).then(function(text) {
             $('#container_' + showingintent).append("<pre id='preintent_" + showingintent + "' contenteditable='true'></pre>")
@@ -220,7 +221,7 @@
 
     function deleteIntent() {
         try{
-            fetch('http://localhost:3000/agents/intents/' + intents[showingintent].id, {
+            fetch(path + '/agents/intents/' + intents[showingintent].id, {
                 method : "delete",
             }).then(function(response) {
                 return response.text();
@@ -241,7 +242,7 @@
 
     function updateIntent() {
         try{
-            fetch('http://localhost:3000/agents/intents/' + intents[showingintent].id, {
+            fetch(path + '/agents/intents/' + intents[showingintent].id, {
                 method : "put",
                 body : $('#preintent_' + showingintent).text(),
                 headers : {

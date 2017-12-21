@@ -14,6 +14,7 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="vars.js"></script>
 
     <!-- Place favicon.ico in the root directory -->
 
@@ -66,7 +67,7 @@
 
     function getEntities() {
         $('#entities-list').empty()
-        fetch('http://localhost:3000/agents/entities', {method : "GET"}).then(function(response) {
+        fetch(path + '/agents/entities', {method : "GET"}).then(function(response) {
             return response.text();
         }).then(function(text) {
             entities = JSON.parse(text)
@@ -91,7 +92,7 @@
 
     function addEntity() {
         try{
-            fetch('http://localhost:3000/agents/entities', {
+            fetch(path + '/agents/entities', {
                 method : "post",
                 body : $('#prenewentity').text(),
                 headers : {
@@ -128,7 +129,7 @@
     }
 
     function getEntityDetails(entityId) {
-        fetch('http://localhost:3000/agents/entities/' + entityId, {method : "GET"}).then(function(response) {
+        fetch(path + '/agents/entities/' + entityId, {method : "GET"}).then(function(response) {
             return response.text();
         }).then(function(text) {
             console.log(text)
@@ -141,7 +142,7 @@
 
     function deleteEntity() {
         try{
-            fetch('http://localhost:3000/agents/entities/' + entities[showingentity].id, {
+            fetch(path + '/agents/entities/' + entities[showingentity].id, {
                 method : "delete",
             }).then(function(response) {
                 return response.text();
@@ -162,7 +163,7 @@
 
     function updateEntity() {
         try{
-            fetch('http://localhost:3000/agents/entities/' + entities[showingentity].id, {
+            fetch(path + '/agents/entities/' + entities[showingentity].id, {
                 method : "put",
                 body : $('#preentity_' + showingentity).text(),
                 headers : {
