@@ -14,7 +14,7 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-
+    <script type="text/javascript" src="vars.js"></script>
     <!-- Place favicon.ico in the root directory -->
 
     <link rel="stylesheet" href="css/normalize.css">
@@ -170,7 +170,7 @@
             message: query
         }
 
-        fetch('http://localhost:3000/chat', {
+        fetch(path + '/chat', {
             method: "post",
             body: JSON.stringify(body),
             headers: {
